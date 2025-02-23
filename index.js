@@ -30,10 +30,24 @@ const PORT = process.env.PORT || 3000;
 // Default middlewares
 app.use(express.json());
 app.use(cookieParser());
+
+// Allow requests from frontend (deployed + local)
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // Deployed frontend URL
+  "http://localhost:5173", // Local development
+];
+
+// Configure CORS properly
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL, "http://localhost:5173"],
-    credentials: true,
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true); // Allow the request
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Allows cookies and session management
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -44,6 +58,13 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/course", courseRoute);
 app.use("/api/v1/purchase", purchaseRoute);
 app.use("/api/v1/progress", courseProgressRoute);
+
+// test endpoint
+app.use("/api/v1/dev", (req, res) => {
+  res.json({
+    created_by: "MD SAMIR ANSARI",
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server listen at port ${PORT}`);
