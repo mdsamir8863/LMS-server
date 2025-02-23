@@ -9,31 +9,35 @@ import mediaRoute from "./routes/media.route.js";
 import purchaseRoute from "./routes/purchaseCourse.route.js";
 import courseProgressRoute from "./routes/courseProgress.route.js";
 
-dotenv.config({});
+import Stripe from "stripe";
 
-// call database connection here
+dotenv.config();
+
+// Check essential env variables
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error("❌ STRIPE_SECRET_KEY is missing");
+  process.exit(1);
+}
+
+// Connect to database
 connectDB();
+
 const app = express();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const PORT = process.env.PORT || 3000;
 
-// default middleware
+// Default middlewares
 app.use(express.json());
 app.use(cookieParser());
-
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [process.env.FRONTEND_URL, "http://localhost:5173"],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-// apis
-app.get("/test", (req, res) => {
-  res.json({
-    name: "samir",
-  });
-});
 
 app.use("/api/v1/media", mediaRoute);
 app.use("/api/v1/user", userRoute);
